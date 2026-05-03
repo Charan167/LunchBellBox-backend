@@ -7,11 +7,11 @@ import authConfig from './auth/config/auth.config';
 import appConfig from './config/app.config';
 import mailConfig from './mail/config/mail.config';
 import fileConfig from './files/config/file.config';
-import googleConfig from './auth-google/config/google.config';
+import redisConfig from './redis/config/redis.config';
+import { RedisModule } from './redis/redis.module';
 import path from 'path';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuthGoogleModule } from './auth-google/auth-google.module';
 import { HeaderResolver, I18nModule } from 'nestjs-i18n';
 import { TypeOrmConfigService } from './database/typeorm-config.service';
 import { MailModule } from './mail/mail.module';
@@ -38,7 +38,7 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
         appConfig,
         mailConfig,
         fileConfig,
-        googleConfig,
+        redisConfig,
       ],
       envFilePath: ['.env'],
     }),
@@ -68,8 +68,8 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
     }),
     UsersModule,
     FilesModule,
+    RedisModule,
     AuthModule,
-    AuthGoogleModule,
     SessionModule,
     MailModule,
     MailerModule,

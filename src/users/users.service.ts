@@ -8,123 +8,49 @@ import { NullableType } from '../utils/types/nullable.type';
 import { FilterUserDto, SortUserDto } from './dto/query-user.dto';
 import { UserRepository } from './infrastructure/persistence/user.repository';
 import { User } from './domain/user';
-import bcrypt from 'bcryptjs';
-import { AuthProvidersEnum } from '../auth/auth-providers.enum';
-import { FilesService } from '../files/files.service';
-import { RoleEnum } from '../roles/roles.enum';
-import { StatusEnum } from '../statuses/statuses.enum';
+import { UserType } from './user-types.enum';
 import { IPaginationOptions } from '../utils/types/pagination-options';
-import { FileType } from '../files/domain/file';
-import { Role } from '../roles/domain/role';
-import { Status } from '../statuses/domain/status';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    private readonly usersRepository: UserRepository,
-    private readonly filesService: FilesService,
-  ) {}
+  constructor(private readonly usersRepository: UserRepository) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    // Do not remove comment below.
-    // <creating-property />
-
-    let password: string | undefined = undefined;
-
-    if (createUserDto.password) {
-      const salt = await bcrypt.genSalt();
-      password = await bcrypt.hash(createUserDto.password, salt);
-    }
-
-    let email: string | null = null;
-
-    if (createUserDto.email) {
-      const userObject = await this.usersRepository.findByEmail(
-        createUserDto.email,
+    if (createUserDto.phoneNumber) {
+      const userObject = await this.usersRepository.findByPhoneNumber(
+        createUserDto.phoneNumber,
       );
       if (userObject) {
         throw new UnprocessableEntityException({
           status: HttpStatus.UNPROCESSABLE_ENTITY,
           errors: {
-            email: 'emailAlreadyExists',
+            phoneNumber: 'phoneNumberAlreadyExists',
           },
         });
       }
-      email = createUserDto.email;
     }
 
-    let photo: FileType | null | undefined = undefined;
-
-    if (createUserDto.photo?.id) {
-      const fileObject = await this.filesService.findById(
-        createUserDto.photo.id,
-      );
-      if (!fileObject) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            photo: 'imageNotExists',
-          },
-        });
-      }
-      photo = fileObject;
-    } else if (createUserDto.photo === null) {
-      photo = null;
-    }
-
-    let role: Role | undefined = undefined;
-
-    if (createUserDto.role?.id) {
-      const roleObject = Object.values(RoleEnum)
-        .map(String)
-        .includes(String(createUserDto.role.id));
-      if (!roleObject) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            role: 'roleNotExists',
-          },
-        });
-      }
-
-      role = {
-        id: createUserDto.role.id,
-      };
-    }
-
-    let status: Status | undefined = undefined;
-
-    if (createUserDto.status?.id) {
-      const statusObject = Object.values(StatusEnum)
-        .map(String)
-        .includes(String(createUserDto.status.id));
-      if (!statusObject) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            status: 'statusNotExists',
-          },
-        });
-      }
-
-      status = {
-        id: createUserDto.status.id,
-      };
+    const validUserTypes = Object.values(UserType);
+    if (!validUserTypes.includes(createUserDto.userType)) {
+      throw new UnprocessableEntityException({
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        errors: {
+          userType: 'userTypeNotExists',
+        },
+      });
     }
 
     return this.usersRepository.create({
-      // Do not remove comment below.
-      // <creating-property-payload />
-      firstName: createUserDto.firstName,
-      lastName: createUserDto.lastName,
-      email: email,
-      password: password,
-      photo: photo,
-      role: role,
-      status: status,
-      provider: createUserDto.provider ?? AuthProvidersEnum.email,
-      socialId: createUserDto.socialId,
+      phoneNumber: createUserDto.phoneNumber,
+      userName: createUserDto.userName ?? null,
+      email: createUserDto.email ?? null,
+      userType: createUserDto.userType,
+      firstName: createUserDto.firstName ?? null,
+      lastName: createUserDto.lastName ?? null,
+      isActive: createUserDto.isActive ?? false,
+      isRestricted: createUserDto.isRestricted ?? false,
+      billingAddress: createUserDto.billingAddress ?? null,
     });
   }
 
@@ -152,133 +78,53 @@ export class UsersService {
     return this.usersRepository.findByIds(ids);
   }
 
-  findByEmail(email: User['email']): Promise<NullableType<User>> {
-    return this.usersRepository.findByEmail(email);
-  }
-
-  findBySocialIdAndProvider({
-    socialId,
-    provider,
-  }: {
-    socialId: User['socialId'];
-    provider: User['provider'];
-  }): Promise<NullableType<User>> {
-    return this.usersRepository.findBySocialIdAndProvider({
-      socialId,
-      provider,
-    });
+  findByPhoneNumber(
+    phoneNumber: User['phoneNumber'],
+  ): Promise<NullableType<User>> {
+    return this.usersRepository.findByPhoneNumber(phoneNumber);
   }
 
   async update(
     id: User['id'],
     updateUserDto: UpdateUserDto,
   ): Promise<User | null> {
-    // Do not remove comment below.
-    // <updating-property />
-
-    let password: string | undefined = undefined;
-
-    if (updateUserDto.password) {
-      const userObject = await this.usersRepository.findById(id);
-
-      if (userObject && userObject?.password !== updateUserDto.password) {
-        const salt = await bcrypt.genSalt();
-        password = await bcrypt.hash(updateUserDto.password, salt);
-      }
-    }
-
-    let email: string | null | undefined = undefined;
-
-    if (updateUserDto.email) {
-      const userObject = await this.usersRepository.findByEmail(
-        updateUserDto.email,
+    if (updateUserDto.phoneNumber) {
+      const userObject = await this.usersRepository.findByPhoneNumber(
+        updateUserDto.phoneNumber,
       );
 
       if (userObject && userObject.id !== id) {
         throw new UnprocessableEntityException({
           status: HttpStatus.UNPROCESSABLE_ENTITY,
           errors: {
-            email: 'emailAlreadyExists',
+            phoneNumber: 'phoneNumberAlreadyExists',
           },
         });
       }
-
-      email = updateUserDto.email;
-    } else if (updateUserDto.email === null) {
-      email = null;
     }
 
-    let photo: FileType | null | undefined = undefined;
-
-    if (updateUserDto.photo?.id) {
-      const fileObject = await this.filesService.findById(
-        updateUserDto.photo.id,
-      );
-      if (!fileObject) {
+    if (updateUserDto.userType) {
+      const validUserTypes = Object.values(UserType);
+      if (!validUserTypes.includes(updateUserDto.userType)) {
         throw new UnprocessableEntityException({
           status: HttpStatus.UNPROCESSABLE_ENTITY,
           errors: {
-            photo: 'imageNotExists',
+            userType: 'userTypeNotExists',
           },
         });
       }
-      photo = fileObject;
-    } else if (updateUserDto.photo === null) {
-      photo = null;
-    }
-
-    let role: Role | undefined = undefined;
-
-    if (updateUserDto.role?.id) {
-      const roleObject = Object.values(RoleEnum)
-        .map(String)
-        .includes(String(updateUserDto.role.id));
-      if (!roleObject) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            role: 'roleNotExists',
-          },
-        });
-      }
-
-      role = {
-        id: updateUserDto.role.id,
-      };
-    }
-
-    let status: Status | undefined = undefined;
-
-    if (updateUserDto.status?.id) {
-      const statusObject = Object.values(StatusEnum)
-        .map(String)
-        .includes(String(updateUserDto.status.id));
-      if (!statusObject) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            status: 'statusNotExists',
-          },
-        });
-      }
-
-      status = {
-        id: updateUserDto.status.id,
-      };
     }
 
     return this.usersRepository.update(id, {
-      // Do not remove comment below.
-      // <updating-property-payload />
+      phoneNumber: updateUserDto.phoneNumber,
+      userName: updateUserDto.userName,
+      email: updateUserDto.email,
+      userType: updateUserDto.userType,
       firstName: updateUserDto.firstName,
       lastName: updateUserDto.lastName,
-      email,
-      password,
-      photo,
-      role,
-      status,
-      provider: updateUserDto.provider,
-      socialId: updateUserDto.socialId,
+      isActive: updateUserDto.isActive,
+      isRestricted: updateUserDto.isRestricted,
+      billingAddress: updateUserDto.billingAddress,
     });
   }
 

@@ -1,8 +1,5 @@
-import { Exclude, Expose } from 'class-transformer';
-import { FileType } from '../../files/domain/file';
-import { Role } from '../../roles/domain/role';
-import { Status } from '../../statuses/domain/status';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { UserType } from '../user-types.enum';
 
 const idType = Number;
 
@@ -12,56 +9,59 @@ export class User {
   })
   id: number | string;
 
+  @ApiPropertyOptional({
+    type: String,
+    example: 'johndoe',
+  })
+  userName: string | null;
+
   @ApiProperty({
+    type: String,
+    example: '+1234567890',
+  })
+  phoneNumber: string;
+
+  @ApiPropertyOptional({
     type: String,
     example: 'john.doe@example.com',
   })
-  @Expose({ groups: ['me', 'admin'] })
   email: string | null;
 
-  @Exclude({ toPlainOnly: true })
-  password?: string;
-
   @ApiProperty({
-    type: String,
-    example: 'email',
+    enum: UserType,
+    example: UserType.User,
   })
-  @Expose({ groups: ['me', 'admin'] })
-  provider: string;
+  userType: UserType;
 
-  @ApiProperty({
-    type: String,
-    example: '1234567890',
-  })
-  @Expose({ groups: ['me', 'admin'] })
-  socialId?: string | null;
-
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: String,
     example: 'John',
   })
   firstName: string | null;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: String,
     example: 'Doe',
   })
   lastName: string | null;
 
   @ApiProperty({
-    type: () => FileType,
+    type: Boolean,
+    example: false,
   })
-  photo?: FileType | null;
+  isActive: boolean;
 
   @ApiProperty({
-    type: () => Role,
+    type: Boolean,
+    example: false,
   })
-  role?: Role | null;
+  isRestricted: boolean;
 
-  @ApiProperty({
-    type: () => Status,
+  @ApiPropertyOptional({
+    type: String,
+    example: '123 Main St, City, Country',
   })
-  status?: Status;
+  billingAddress: string | null;
 
   @ApiProperty()
   createdAt: Date;

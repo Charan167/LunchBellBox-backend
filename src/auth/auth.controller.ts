@@ -13,17 +13,16 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { AuthEmailLoginDto } from './dto/auth-email-login.dto';
-import { AuthForgotPasswordDto } from './dto/auth-forgot-password.dto';
-import { AuthConfirmEmailDto } from './dto/auth-confirm-email.dto';
-import { AuthResetPasswordDto } from './dto/auth-reset-password.dto';
+import { AuthRequestOtpDto } from './dto/auth-request-otp.dto';
+import { AuthVerifyOtpDto } from './dto/auth-verify-otp.dto';
 import { AuthUpdateDto } from './dto/auth-update.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { AuthRegisterLoginDto } from './dto/auth-register-login.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
 import { NullableType } from '../utils/types/nullable.type';
 import { User } from '../users/domain/user';
 import { RefreshResponseDto } from './dto/refresh-response.dto';
+import { JwtPayloadType } from './strategies/types/jwt-payload.type';
+import { JwtRefreshPayloadType } from './strategies/types/jwt-refresh-payload.type';
 
 @ApiTags('Auth')
 @Controller({
@@ -33,55 +32,34 @@ import { RefreshResponseDto } from './dto/refresh-response.dto';
 export class AuthController {
   constructor(private readonly service: AuthService) {}
 
+  @Post('otp/request')
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: 'OTP sent successfully' },
+      },
+    },
+  })
+  @HttpCode(HttpStatus.OK)
+  public requestOtp(
+    @Body() requestOtpDto: AuthRequestOtpDto,
+  ): Promise<{ message: string }> {
+    return this.service.requestOtp(requestOtpDto.phoneNumber);
+  }
+
   @SerializeOptions({
     groups: ['me'],
   })
-  @Post('email/login')
+  @Post('otp/verify')
   @ApiOkResponse({
     type: LoginResponseDto,
   })
   @HttpCode(HttpStatus.OK)
-  public login(@Body() loginDto: AuthEmailLoginDto): Promise<LoginResponseDto> {
-    return this.service.validateLogin(loginDto);
-  }
-
-  @Post('email/register')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async register(@Body() createUserDto: AuthRegisterLoginDto): Promise<void> {
-    return this.service.register(createUserDto);
-  }
-
-  @Post('email/confirm')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async confirmEmail(
-    @Body() confirmEmailDto: AuthConfirmEmailDto,
-  ): Promise<void> {
-    return this.service.confirmEmail(confirmEmailDto.hash);
-  }
-
-  @Post('email/confirm/new')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async confirmNewEmail(
-    @Body() confirmEmailDto: AuthConfirmEmailDto,
-  ): Promise<void> {
-    return this.service.confirmNewEmail(confirmEmailDto.hash);
-  }
-
-  @Post('forgot/password')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async forgotPassword(
-    @Body() forgotPasswordDto: AuthForgotPasswordDto,
-  ): Promise<void> {
-    return this.service.forgotPassword(forgotPasswordDto.email);
-  }
-
-  @Post('reset/password')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  resetPassword(@Body() resetPasswordDto: AuthResetPasswordDto): Promise<void> {
-    return this.service.resetPassword(
-      resetPasswordDto.hash,
-      resetPasswordDto.password,
-    );
+  public verifyOtp(
+    @Body() verifyOtpDto: AuthVerifyOtpDto,
+  ): Promise<LoginResponseDto> {
+    return this.service.verifyOtp(verifyOtpDto.phoneNumber, verifyOtpDto.otp);
   }
 
   @ApiBearerAuth()
@@ -94,7 +72,9 @@ export class AuthController {
     type: User,
   })
   @HttpCode(HttpStatus.OK)
-  public me(@Request() request): Promise<NullableType<User>> {
+  public me(
+    @Request() request: { user: JwtPayloadType },
+  ): Promise<NullableType<User>> {
     return this.service.me(request.user);
   }
 
@@ -108,7 +88,9 @@ export class AuthController {
   @Post('refresh')
   @UseGuards(AuthGuard('jwt-refresh'))
   @HttpCode(HttpStatus.OK)
-  public refresh(@Request() request): Promise<RefreshResponseDto> {
+  public refresh(
+    @Request() request: { user: JwtRefreshPayloadType },
+  ): Promise<RefreshResponseDto> {
     return this.service.refreshToken({
       sessionId: request.user.sessionId,
       hash: request.user.hash,
@@ -119,7 +101,9 @@ export class AuthController {
   @Post('logout')
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
-  public async logout(@Request() request): Promise<void> {
+  public async logout(
+    @Request() request: { user: JwtPayloadType },
+  ): Promise<void> {
     await this.service.logout({
       sessionId: request.user.sessionId,
     });
@@ -136,7 +120,7 @@ export class AuthController {
     type: User,
   })
   public update(
-    @Request() request,
+    @Request() request: { user: JwtPayloadType },
     @Body() userDto: AuthUpdateDto,
   ): Promise<NullableType<User>> {
     return this.service.update(request.user, userDto);
@@ -146,7 +130,9 @@ export class AuthController {
   @Delete('me')
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
-  public async delete(@Request() request): Promise<void> {
+  public async delete(
+    @Request() request: { user: JwtPayloadType },
+  ): Promise<void> {
     return this.service.softDelete(request.user);
   }
 }
