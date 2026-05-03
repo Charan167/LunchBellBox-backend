@@ -33,9 +33,7 @@ export class AuthService {
     private readonly otpService: OtpService,
   ) {}
 
-  async requestOtp(
-    phoneNumber: string,
-  ): Promise<AuthRequestOtpResponseDto> {
+  async requestOtp(phoneNumber: string): Promise<AuthRequestOtpResponseDto> {
     let user = await this.usersService.findByPhoneNumber(phoneNumber);
     let newUser = false;
 
@@ -68,6 +66,7 @@ export class AuthService {
     }
 
     const otp = await this.otpService.generateOtp(phoneNumber);
+    console.log(otp);
 
     // In production, send OTP via SMS here
     // For non-production, OTP is always '123456'
