@@ -7,7 +7,7 @@ import { User } from '../../../../users/domain/user';
 
 interface RedisSessionData {
   id: number;
-  userId: number;
+  userId: string;
   hash: string;
   createdAt: string;
   updatedAt: string;
@@ -60,7 +60,7 @@ export class RedisSessionRepository implements SessionRepository {
 
     const sessionData: RedisSessionData = {
       id,
-      userId: Number(data.user.id),
+      userId: data.user.id,
       hash: data.hash,
       createdAt: now,
       updatedAt: now,
@@ -68,7 +68,10 @@ export class RedisSessionRepository implements SessionRepository {
 
     await Promise.all([
       client.set(`${this.SESSION_PREFIX}${id}`, this.serialize(sessionData)),
-      client.sadd(`${this.USER_SESSIONS_PREFIX}${sessionData.userId}`, String(id)),
+      client.sadd(
+        `${this.USER_SESSIONS_PREFIX}${sessionData.userId}`,
+        String(id),
+      ),
     ]);
 
     return this.toDomain(sessionData);
@@ -94,10 +97,7 @@ export class RedisSessionRepository implements SessionRepository {
     }
     existing.updatedAt = new Date().toISOString();
 
-    await client.set(
-      `${this.SESSION_PREFIX}${id}`,
-      this.serialize(existing),
-    );
+    await client.set(`${this.SESSION_PREFIX}${id}`, this.serialize(existing));
 
     return this.toDomain(existing);
   }
@@ -152,9 +152,8 @@ export class RedisSessionRepository implements SessionRepository {
 
   async deleteByUserId(conditions: { userId: User['id'] }): Promise<void> {
     const client = this.redisService.getClient();
-    const userId = Number(conditions.userId);
     const sessionIds = await client.smembers(
-      `${this.USER_SESSIONS_PREFIX}${userId}`,
+      `${this.USER_SESSIONS_PREFIX}${conditions.userId}`,
     );
 
     if (sessionIds.length > 0) {
@@ -163,7 +162,7 @@ export class RedisSessionRepository implements SessionRepository {
       );
       await Promise.all([
         ...keys.map((key) => client.del(key)),
-        client.del(`${this.USER_SESSIONS_PREFIX}${userId}`),
+        client.del(`${this.USER_SESSIONS_PREFIX}${conditions.userId}`),
       ]);
     }
   }
@@ -173,10 +172,9 @@ export class RedisSessionRepository implements SessionRepository {
     excludeSessionId: Session['id'];
   }): Promise<void> {
     const client = this.redisService.getClient();
-    const userId = Number(conditions.userId);
     const excludeId = String(conditions.excludeSessionId);
     const sessionIds = await client.smembers(
-      `${this.USER_SESSIONS_PREFIX}${userId}`,
+      `${this.USER_SESSIONS_PREFIX}${conditions.userId}`,
     );
 
     const toDelete = sessionIds.filter((id) => id !== excludeId);
@@ -188,7 +186,7 @@ export class RedisSessionRepository implements SessionRepository {
       await Promise.all([
         ...keys.map((key) => client.del(key)),
         ...toDelete.map((id) =>
-          client.srem(`${this.USER_SESSIONS_PREFIX}${userId}`, id),
+          client.srem(`${this.USER_SESSIONS_PREFIX}${conditions.userId}`, id),
         ),
       ]);
     }

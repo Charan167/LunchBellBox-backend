@@ -20,6 +20,7 @@ import { Session } from '../session/domain/session';
 import { SessionService } from '../session/session.service';
 import { User } from '../users/domain/user';
 import { UserType } from '../users/user-types.enum';
+import { AuthRequestOtpResponseDto } from './dto/auth-request-otp-response.dto';
 import { OtpService } from './otp.service';
 
 @Injectable()
@@ -32,34 +33,38 @@ export class AuthService {
     private readonly otpService: OtpService,
   ) {}
 
-  async requestOtp(phoneNumber: string): Promise<{ message: string }> {
-    const user = await this.usersService.findByPhoneNumber(phoneNumber);
+  async requestOtp(
+    phoneNumber: string,
+  ): Promise<AuthRequestOtpResponseDto> {
+    let user = await this.usersService.findByPhoneNumber(phoneNumber);
+    let newUser = false;
 
     if (!user) {
-      throw new UnprocessableEntityException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        errors: {
-          phoneNumber: 'userNotFound',
-        },
+      user = await this.usersService.create({
+        phoneNumber,
+        userType: UserType.User,
+        isActive: true,
+        isRestricted: false,
       });
-    }
+      newUser = true;
+    } else {
+      if (!user.isActive) {
+        throw new UnprocessableEntityException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          errors: {
+            phoneNumber: 'userNotActive',
+          },
+        });
+      }
 
-    if (!user.isActive) {
-      throw new UnprocessableEntityException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        errors: {
-          phoneNumber: 'userNotActive',
-        },
-      });
-    }
-
-    if (user.isRestricted) {
-      throw new UnprocessableEntityException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        errors: {
-          phoneNumber: 'userRestricted',
-        },
-      });
+      if (user.isRestricted) {
+        throw new UnprocessableEntityException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          errors: {
+            phoneNumber: 'userRestricted',
+          },
+        });
+      }
     }
 
     const otp = await this.otpService.generateOtp(phoneNumber);
@@ -71,13 +76,10 @@ export class AuthService {
       // await this.smsService.send(phoneNumber, `Your OTP is: ${otp}`);
     }
 
-    return { message: 'OTP sent successfully' };
+    return { message: 'OTP sent successfully', newUser };
   }
 
-  async verifyOtp(
-    phoneNumber: string,
-    otp: string,
-  ): Promise<LoginResponseDto> {
+  async verifyOtp(phoneNumber: string, otp: string): Promise<LoginResponseDto> {
     const isValid = await this.otpService.verifyOtp(phoneNumber, otp);
 
     if (!isValid) {

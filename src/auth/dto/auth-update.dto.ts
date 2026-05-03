@@ -1,5 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsPhoneNumber } from 'class-validator';
+import { IsNotEmpty, IsOptional } from 'class-validator';
+import { IsValidPhoneNumber } from '../../utils/validators/is-valid-phone-number.validator';
 
 export class AuthUpdateDto {
   @ApiPropertyOptional({ example: 'John' })
@@ -12,10 +13,10 @@ export class AuthUpdateDto {
   @IsNotEmpty({ message: 'mustBeNotEmpty' })
   lastName?: string;
 
-  @ApiPropertyOptional({ example: '+1234567890' })
+  @ApiPropertyOptional({ example: '9449234343' })
   @IsOptional()
   @IsNotEmpty()
-  @IsPhoneNumber()
+  @IsValidPhoneNumber()
   phoneNumber?: string;
 
   @ApiPropertyOptional({ example: 'john.doe@example.com' })

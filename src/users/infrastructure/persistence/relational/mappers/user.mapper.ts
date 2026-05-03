@@ -22,7 +22,7 @@ export class UserMapper {
 
   static toPersistence(domainEntity: User): UserEntity {
     const persistenceEntity = new UserEntity();
-    if (domainEntity.id && typeof domainEntity.id === 'number') {
+    if (domainEntity.id) {
       persistenceEntity.id = domainEntity.id;
     }
     persistenceEntity.userName = domainEntity.userName;

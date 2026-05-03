@@ -14,6 +14,7 @@ import {
 import { AuthService } from './auth.service';
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { AuthRequestOtpDto } from './dto/auth-request-otp.dto';
+import { AuthRequestOtpResponseDto } from './dto/auth-request-otp-response.dto';
 import { AuthVerifyOtpDto } from './dto/auth-verify-otp.dto';
 import { AuthUpdateDto } from './dto/auth-update.dto';
 import { AuthGuard } from '@nestjs/passport';
@@ -34,17 +35,12 @@ export class AuthController {
 
   @Post('otp/request')
   @ApiOkResponse({
-    schema: {
-      type: 'object',
-      properties: {
-        message: { type: 'string', example: 'OTP sent successfully' },
-      },
-    },
+    type: AuthRequestOtpResponseDto,
   })
   @HttpCode(HttpStatus.OK)
   public requestOtp(
     @Body() requestOtpDto: AuthRequestOtpDto,
-  ): Promise<{ message: string }> {
+  ): Promise<AuthRequestOtpResponseDto> {
     return this.service.requestOtp(requestOtpDto.phoneNumber);
   }
 

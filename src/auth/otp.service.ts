@@ -7,7 +7,7 @@ export class OtpService {
   private readonly OTP_EXPIRY_SECONDS = 300; // 5 minutes
   private readonly DUMMY_OTP = '123456';
 
-  constructor(private readonly redisService: RedisService) { }
+  constructor(private readonly redisService: RedisService) {}
 
   async generateOtp(phoneNumber: string): Promise<string> {
     const isNonProduction = process.env.NODE_ENV !== 'production';

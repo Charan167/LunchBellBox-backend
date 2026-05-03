@@ -1,13 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UserType } from '../user-types.enum';
 
-const idType = Number;
-
 export class User {
   @ApiProperty({
-    type: idType,
+    type: String,
+    example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
   })
-  id: number | string;
+  id: string;
 
   @ApiPropertyOptional({
     type: String,

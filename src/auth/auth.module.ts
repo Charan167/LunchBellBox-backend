@@ -11,12 +11,7 @@ import { UsersModule } from '../users/users.module';
 import { OtpService } from './otp.service';
 
 @Module({
-  imports: [
-    UsersModule,
-    SessionModule,
-    PassportModule,
-    JwtModule.register({}),
-  ],
+  imports: [UsersModule, SessionModule, PassportModule, JwtModule.register({})],
   controllers: [AuthController],
   providers: [
     AuthService,

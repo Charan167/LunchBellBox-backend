@@ -1,12 +1,13 @@
 import { PartialType, ApiPropertyOptional } from '@nestjs/swagger';
 import { CreateUserDto } from './create-user.dto';
-import { IsEnum, IsOptional, IsPhoneNumber } from 'class-validator';
+import { IsEnum, IsOptional } from 'class-validator';
 import { UserType } from '../user-types.enum';
+import { IsValidPhoneNumber } from '../../utils/validators/is-valid-phone-number.validator';
 
 export class UpdateUserDto extends PartialType(CreateUserDto) {
-  @ApiPropertyOptional({ example: '+1234567890', type: String })
+  @ApiPropertyOptional({ example: '9449234343', type: String })
   @IsOptional()
-  @IsPhoneNumber()
+  @IsValidPhoneNumber()
   phoneNumber?: string;
 
   @ApiPropertyOptional({ example: 'johndoe', type: String })

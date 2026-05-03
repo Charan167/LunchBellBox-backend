@@ -1,16 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsEnum,
-  IsNotEmpty,
-  IsOptional,
-  IsPhoneNumber,
-} from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional } from 'class-validator';
 import { UserType } from '../user-types.enum';
+import { IsValidPhoneNumber } from '../../utils/validators/is-valid-phone-number.validator';
 
 export class CreateUserDto {
-  @ApiProperty({ example: '+1234567890', type: String })
+  @ApiProperty({ example: '9449234343', type: String })
   @IsNotEmpty()
-  @IsPhoneNumber()
+  @IsValidPhoneNumber()
   phoneNumber: string;
 
   @ApiPropertyOptional({ example: 'johndoe', type: String })

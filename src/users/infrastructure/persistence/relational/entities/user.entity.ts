@@ -14,8 +14,8 @@ import { UserType } from '../../../../user-types.enum';
   name: 'user',
 })
 export class UserEntity extends EntityRelationalHelper {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Index()
   @Column({ type: String, nullable: true })
