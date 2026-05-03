@@ -4,64 +4,48 @@ import {
   DeleteDateColumn,
   Entity,
   Index,
-  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-  JoinColumn,
-  OneToOne,
 } from 'typeorm';
-import { RoleEntity } from '../../../../../roles/infrastructure/persistence/relational/entities/role.entity';
-import { StatusEntity } from '../../../../../statuses/infrastructure/persistence/relational/entities/status.entity';
-import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity';
-
-import { AuthProvidersEnum } from '../../../../../auth/auth-providers.enum';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
+import { UserType } from '../../../../user-types.enum';
 
 @Entity({
   name: 'user',
 })
 export class UserEntity extends EntityRelationalHelper {
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  // For "string | null" we need to use String type.
-  // More info: https://github.com/typeorm/typeorm/issues/2567
-  @Column({ type: String, unique: true, nullable: true })
-  email: string | null;
-
-  @Column({ nullable: true })
-  password?: string;
-
-  @Column({ default: AuthProvidersEnum.email })
-  provider: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Index()
   @Column({ type: String, nullable: true })
-  socialId?: string | null;
+  userName: string | null;
+
+  @Index()
+  @Column({ type: String, unique: true })
+  phoneNumber: string;
+
+  @Column({ type: String, nullable: true })
+  email: string | null;
+
+  @Column({ type: 'enum', enum: UserType, default: UserType.User })
+  userType: UserType;
 
   @Index()
   @Column({ type: String, nullable: true })
   firstName: string | null;
 
-  @Index()
   @Column({ type: String, nullable: true })
   lastName: string | null;
 
-  @OneToOne(() => FileEntity, {
-    eager: true,
-  })
-  @JoinColumn()
-  photo?: FileEntity | null;
+  @Column({ type: 'boolean', default: false })
+  isActive: boolean;
 
-  @ManyToOne(() => RoleEntity, {
-    eager: true,
-  })
-  role?: RoleEntity | null;
+  @Column({ type: 'boolean', default: false })
+  isRestricted: boolean;
 
-  @ManyToOne(() => StatusEntity, {
-    eager: true,
-  })
-  status?: StatusEntity;
+  @Column({ type: 'text', nullable: true })
+  billingAddress: string | null;
 
   @CreateDateColumn()
   createdAt: Date;

@@ -1,6 +1,9 @@
 # compiled output
 /dist
 /node_modules
+src/**/*.js
+src/**/*.js.map
+*.tsbuildinfo
 
 # Logs
 logs

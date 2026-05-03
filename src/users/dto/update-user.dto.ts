@@ -1,28 +1,27 @@
 import { PartialType, ApiPropertyOptional } from '@nestjs/swagger';
 import { CreateUserDto } from './create-user.dto';
-
-import { Transform, Type } from 'class-transformer';
-import { IsEmail, IsOptional, MinLength } from 'class-validator';
-import { FileDto } from '../../files/dto/file.dto';
-import { RoleDto } from '../../roles/dto/role.dto';
-import { StatusDto } from '../../statuses/dto/status.dto';
-import { lowerCaseTransformer } from '../../utils/transformers/lower-case.transformer';
+import { IsEnum, IsOptional } from 'class-validator';
+import { UserType } from '../user-types.enum';
+import { IsValidPhoneNumber } from '../../utils/validators/is-valid-phone-number.validator';
 
 export class UpdateUserDto extends PartialType(CreateUserDto) {
-  @ApiPropertyOptional({ example: 'test1@example.com', type: String })
-  @Transform(lowerCaseTransformer)
+  @ApiPropertyOptional({ example: '9449234343', type: String })
   @IsOptional()
-  @IsEmail()
+  @IsValidPhoneNumber()
+  phoneNumber?: string;
+
+  @ApiPropertyOptional({ example: 'johndoe', type: String })
+  @IsOptional()
+  userName?: string | null;
+
+  @ApiPropertyOptional({ example: 'john.doe@example.com', type: String })
+  @IsOptional()
   email?: string | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ enum: UserType })
   @IsOptional()
-  @MinLength(6)
-  password?: string;
-
-  provider?: string;
-
-  socialId?: string | null;
+  @IsEnum(UserType)
+  userType?: UserType;
 
   @ApiPropertyOptional({ example: 'John', type: String })
   @IsOptional()
@@ -32,17 +31,15 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
   @IsOptional()
   lastName?: string | null;
 
-  @ApiPropertyOptional({ type: () => FileDto })
+  @ApiPropertyOptional({ example: false })
   @IsOptional()
-  photo?: FileDto | null;
+  isActive?: boolean;
 
-  @ApiPropertyOptional({ type: () => RoleDto })
+  @ApiPropertyOptional({ example: false })
   @IsOptional()
-  @Type(() => RoleDto)
-  role?: RoleDto | null;
+  isRestricted?: boolean;
 
-  @ApiPropertyOptional({ type: () => StatusDto })
+  @ApiPropertyOptional({ example: '123 Main St, City, Country', type: String })
   @IsOptional()
-  @Type(() => StatusDto)
-  status?: StatusDto;
+  billingAddress?: string | null;
 }

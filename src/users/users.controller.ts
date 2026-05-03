@@ -21,8 +21,6 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import { Roles } from '../roles/roles.decorator';
-import { RoleEnum } from '../roles/roles.enum';
 import { AuthGuard } from '@nestjs/passport';
 
 import {
@@ -33,12 +31,13 @@ import { NullableType } from '../utils/types/nullable.type';
 import { QueryUserDto } from './dto/query-user.dto';
 import { User } from './domain/user';
 import { UsersService } from './users.service';
-import { RolesGuard } from '../roles/roles.guard';
 import { infinityPagination } from '../utils/infinity-pagination';
+import { UserTypeGuard, UserTypes } from './guards/user-type.guard';
+import { UserType } from './user-types.enum';
 
 @ApiBearerAuth()
-@Roles(RoleEnum.admin)
-@UseGuards(AuthGuard('jwt'), RolesGuard)
+@UserTypes(UserType.SuperAdmin, UserType.Admin)
+@UseGuards(AuthGuard('jwt'), UserTypeGuard)
 @ApiTags('Users')
 @Controller({
   path: 'users',
@@ -55,8 +54,8 @@ export class UsersController {
   })
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() createProfileDto: CreateUserDto): Promise<User> {
-    return this.usersService.create(createProfileDto);
+  create(@Body() createUserDto: CreateUserDto): Promise<User> {
+    return this.usersService.create(createUserDto);
   }
 
   @ApiOkResponse({

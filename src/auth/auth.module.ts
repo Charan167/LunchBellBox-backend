@@ -6,20 +6,20 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { AnonymousStrategy } from './strategies/anonymous.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
-import { MailModule } from '../mail/mail.module';
 import { SessionModule } from '../session/session.module';
 import { UsersModule } from '../users/users.module';
+import { OtpService } from './otp.service';
 
 @Module({
-  imports: [
-    UsersModule,
-    SessionModule,
-    PassportModule,
-    MailModule,
-    JwtModule.register({}),
-  ],
+  imports: [UsersModule, SessionModule, PassportModule, JwtModule.register({})],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, JwtRefreshStrategy, AnonymousStrategy],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    JwtRefreshStrategy,
+    AnonymousStrategy,
+    OtpService,
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}

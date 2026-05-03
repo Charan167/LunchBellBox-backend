@@ -35,10 +35,14 @@ export class UsersRelationalRepository implements UserRepository {
     paginationOptions: IPaginationOptions;
   }): Promise<User[]> {
     const where: FindOptionsWhere<UserEntity> = {};
-    if (filterOptions?.roles?.length) {
-      where.role = filterOptions.roles.map((role) => ({
-        id: Number(role.id),
-      }));
+    if (filterOptions?.userType) {
+      where.userType = filterOptions.userType;
+    }
+    if (filterOptions?.isActive !== undefined) {
+      where.isActive = filterOptions.isActive;
+    }
+    if (filterOptions?.isRestricted !== undefined) {
+      where.isRestricted = filterOptions.isRestricted;
     }
 
     const entities = await this.usersRepository.find({
@@ -59,7 +63,7 @@ export class UsersRelationalRepository implements UserRepository {
 
   async findById(id: User['id']): Promise<NullableType<User>> {
     const entity = await this.usersRepository.findOne({
-      where: { id: Number(id) },
+      where: { id },
     });
 
     return entity ? UserMapper.toDomain(entity) : null;
@@ -73,27 +77,11 @@ export class UsersRelationalRepository implements UserRepository {
     return entities.map((user) => UserMapper.toDomain(user));
   }
 
-  async findByEmail(email: User['email']): Promise<NullableType<User>> {
-    if (!email) return null;
-
+  async findByPhoneNumber(
+    phoneNumber: User['phoneNumber'],
+  ): Promise<NullableType<User>> {
     const entity = await this.usersRepository.findOne({
-      where: { email },
-    });
-
-    return entity ? UserMapper.toDomain(entity) : null;
-  }
-
-  async findBySocialIdAndProvider({
-    socialId,
-    provider,
-  }: {
-    socialId: User['socialId'];
-    provider: User['provider'];
-  }): Promise<NullableType<User>> {
-    if (!socialId || !provider) return null;
-
-    const entity = await this.usersRepository.findOne({
-      where: { socialId, provider },
+      where: { phoneNumber },
     });
 
     return entity ? UserMapper.toDomain(entity) : null;
@@ -101,7 +89,7 @@ export class UsersRelationalRepository implements UserRepository {
 
   async update(id: User['id'], payload: Partial<User>): Promise<User> {
     const entity = await this.usersRepository.findOne({
-      where: { id: Number(id) },
+      where: { id },
     });
 
     if (!entity) {
